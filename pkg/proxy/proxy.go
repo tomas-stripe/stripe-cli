@@ -69,6 +69,9 @@ type Config struct {
 
 	// Force use of unencrypted ws:// protocol instead of wss://
 	NoWSS bool
+
+	// Event handler
+	EventHandler websocket.EventHandlerFunc
 }
 
 // A Proxy opens a websocket connection with Stripe, listens for incoming
@@ -122,6 +125,11 @@ func (p *Proxy) Run(ctx context.Context) error {
 			p.cfg.Log.Fatalf("Error while authenticating with Stripe: %v", err)
 		}
 
+		eventHandler := p.cfg.EventHandler
+		if eventHandler == nil {
+			eventHandler = websocket.EventHandlerFunc(p.processWebhookEvent)
+		}
+
 		p.webSocketClient = websocket.NewClient(
 			session.WebSocketURL,
 			session.WebSocketID,
@@ -130,7 +138,7 @@ func (p *Proxy) Run(ctx context.Context) error {
 				Log:               p.cfg.Log,
 				NoWSS:             p.cfg.NoWSS,
 				ReconnectInterval: time.Duration(session.ReconnectDelay) * time.Second,
-				EventHandler:      websocket.EventHandlerFunc(p.processWebhookEvent),
+				EventHandler:      eventHandler,
 			},
 		)
 
