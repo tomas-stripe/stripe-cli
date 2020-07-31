@@ -18,6 +18,7 @@ func AddTerminalSubCmds(rootCmd *cobra.Command, cfg *config.Config) error {
 			found = true
 
 			NewQuickstartCmd(cmd, cfg)
+			NewTunnelCmd(cmd, cfg)
 
 			break
 		}
